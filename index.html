@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sari-Sari Store Inventory Management System</title>
+    <style>
+        /* Ensure body and html take up full height */
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            font-family: Arial, sans-serif;
+        }
+
+        /* Full-screen container */
+        .container {
+            display: flex;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background-color: #333;
+            color: white;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            height: 100%;
+            border-radius: 8px;
+            box-sizing: border-box;
+            position: sticky;
+            top: 0;
+            transition: width 0.3s;
+        }
+
+        .sidebar.collapsed {
+            width: 60px;
+        }
+
+        .sidebar.collapsed .sidebar button {
+            display: none;
+        }
+
+        .sidebar.collapsed .sidebar-toggle {
+            display: block;
+        }
+
+        .sidebar button {
+            background-color: #d3d3d3; /* Light gray background */
+            color: black; /* Black font color */
+            font-family: 'Times New Roman', Times, serif; /* More readable font */
+            font-size: 17px; /* Larger font size for readability */
+            font-weight: bold; /* Bold font */
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .sidebar button:hover {
+            background-color: #c0c0c0; /* Slightly darker gray on hover */
+        }
+
+        .sidebar-toggle {
+            display: block;
+            background-color: #333;
+            color: white;
+            padding: 10px;
+            border: none;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        /* Main content area */
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            height: 100%;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+            max-width: 100%;
+            box-sizing: border-box;
+            transition: margin-left 0.3s;
+        }
+
+        .main-content.collapsed {
+            margin-left: 60px;
+        }
+
+        /* Login container */
+        .login-container {
+            background-color: #d3d3d3; /* Light gray background for Admin Login container */
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 450px;
+            margin: auto;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: bold;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .login-button, .add-item-button, .edit-button, .add-category-button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .login-button:hover, .add-item-button:hover, .edit-button:hover, .add-category-button:hover {
+            background-color: #45a049;
+        }
+
+        /* Inventory Table Container */
+        .inventory-table-container {
+            margin-top: 20px;
+            width: 100%;
+            overflow-y: auto;
+            max-height: 500px;
+        }
+
+        .inventory-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            table-layout: auto;
+        }
+
+        .inventory-table th, .inventory-table td {
+            padding: 15px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        .inventory-table th {
+            background-color: #f2f2f2;
+        }
+
+        .inventory-table tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .category-title {
+            font-size: 1.7em;
+            margin-top: 20px;
+            color: #000000;
+            background-color: #d3d3d3;
+            padding: 15px;
+            text-align: center;
+            border-radius: 5px;
+            font-family: "Times New Roman", Times, serif;
+            font-weight: bold;
+            position: relative;
+        }
+
+        /* Delete X Button */
+        .delete-category-btn {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.5em;
+            color: #ff0000;
+            cursor: pointer;
+            display: none;
+        }
+
+        .category-title:hover .delete-category-btn {
+            display: block;
+        }
+
+        .total-container {
+            background-color: #e1e1e1;
+            padding: 12px;
+            margin-top: 12px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .best-seller {
+            font-size: 1.3em;
+            color: rgb(27, 26, 26); /* Ensure text is readable */
+            font-weight: bold;
+            text-align: center;
+            margin-top: 12px;
+            background-color: #d1f1d1; /* Light green background for Best Seller */
+            padding: 12px;
+            border-radius: 5px;
+        }
+
+        .new-category-container {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        }
+
+        .new-category-container input {
+            width: calc(100% - 24px);
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .new-category-container button {
+            width: 100%;
+            padding: 12px;
+            border-radius: 4px;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            border: none;
+        }
+
+        .new-category-container button:hover {
+            background-color: #45a049;
+        }
+
+        .add-item-container {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        }
+
+        .add-item-container input, .add-item-container select {
+            width: calc(100% - 24px);
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .add-item-container button {
+            width: 100%;
+            padding: 12px;
+            border-radius: 4px;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            border: none;
+        }
+
+        .add-item-container button:hover {
+            background-color: #45a049;
+        }
+
+        .search-container {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .search-container input {
+            width: 80%;
+            padding: 12px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+        .search-container button {
+            width: 18%;
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .search-container button:hover {
+            background-color: #45a049;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                align-items: center;
+            }
+            .sidebar {
+                width: 100%;
+                margin-bottom: 20px;
+            }
+            .sidebar.collapsed {
+                width: 100%;
+            }
+            .main-content {
+                margin-left: 0;
+            }
+            .main-content.collapsed {
+                margin-left: 0;
+            }
+            .inventory-table {
+                display: block;
+                overflow-x: auto;
+            }
+        }
+
+        .delete-item-btn {
+            display: none;
+            color: red;
+            cursor: pointer;
+            font-weight: bold;
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .inventory-table tr:hover .delete-item-btn {
+            display: inline;
+        }
+
+        .delete-category-btn {
+            display: none;
+            color: red;
+            cursor: pointer;
+            font-weight: bold;
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .category-title:hover .delete-category-btn {
+            display: inline;
+        }
+
+        .total-profit {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .low-stock {
+            background-color: #ffcccc; /* Light red for low stock */
+        }
+
+        .inventory-table td {
+            position: relative;
+        }
+
+        .total-summary {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .category-summary {
+            font-size: 1.1em;
+            font-weight: bold;
+            margin-top: 10px;
+            text-align: left;
+        }
+        .about-container {
+    max-width: 800px;
+    margin: 20px auto;
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    display: none; /* Initially hidden */
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.about-title {
+    font-size: 28px;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.about-description {
+    font-size: 16px;
+    color: #555;
+    margin-bottom: 20px;
+}
+
+.team-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+}
+
+.team-member {
+    background: #f9f9f9;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.team-member:hover {
+    transform: translateY(-5px);
+}
+
+.team-member h3 {
+    margin: 0;
+    font-size: 20px;
+    color: #222;
+}
+
+.role {
+    font-weight: bold;
+    color: #007bff;
+    margin-bottom: 8px;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+    .password-container {
+        position: relative;
+    }
+
+    .password-container input {
+        width: 100%;
+        padding-right: 40px; /* Space for the eye icon */
+    }
+
+    .toggle-password {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        font-size: 18px;
+        color: #333;
+    }
+    </style>
+<script src="script.js" defer></script>
+<script src="auth.js" defer></script> <!-- Separate script for login/auth -->
+<script src="inventory.js" defer></script> <!-- Separate script for inventory functions -->
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar" style="display: none;"> <!-- Sidebar hidden by default -->
+            <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+            <button onclick="showHome()">Home</button>
+            <button onclick="showInventory()">Inventory Management</button>
+            <button onclick="showAboutUs()">About Us</button> <!-- Added About Us button -->
+            <button onclick="logout()">Logout</button> <!-- Added Logout button -->
+         
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="main-content" id="main-content">
+            <!-- Login Container -->
+            <div id="login-container" class="login-container">
+                <h2>Admin Login</h2>
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" placeholder="Enter admin email" required>
+                </div>
+                <div class="form-group password-container">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" placeholder="Enter admin password" required>
+                    <span class="toggle-password" onclick="togglePassword()">👁</span>
+                </div>
+                <button class="login-button" onclick="login()">Login</button>
+                <div class="message" id="message"></div>
+            </div>
+
+            <!-- Home Content -->
+            <div id="home-content" class="main-content" style="display: none;">
+                <h2>Welcome to the Admin Dashboard</h2>
+                <p>Choose an option from the sidebar to manage the store's inventory.</p>
+            </div>
+
+            <!-- Dashboard Content -->
+            <div id="dashboard-container" class="main-content" style="display: none;">
+                <h2>Inventory Management System</h2>
+                <p>Welcome, Admin!</p>
+
+                <!-- Search Bar -->
+                <div class="search-container">
+                    <input type="text" id="search-item" placeholder="Search Item..." onkeyup="searchItem()">
+                    <button onclick="searchItem()">Search</button>
+                </div>
+
+                <div class="inventory-table-container" id="inventory-container"></div>
+
+                <!-- Add Category -->
+                <div class="new-category-container">
+                    <h3>Add New Category</h3>
+                    <input type="text" id="new-category-name" placeholder="Enter New Category Name">
+                    <button class="add-category-button" onclick="addCategory()">Add Category</button>
+                </div>
+
+                <!-- Add Item -->
+                <div class="add-item-container">
+                    <h3>Add New Item</h3>
+                    <div class="form-group">
+                        <label for="category">Select Category:</label>
+                        <select id="category">
+                            <!-- Categories will be populated here dynamically -->
+                        </select>
+                    </div>
+                    <input type="text" id="new-item-name" placeholder="Item Name">
+                    <input type="number" id="new-item-quantity" placeholder="Quantity">
+                    <input type="number" id="new-item-price" placeholder="Selling Price">
+                    <input type="number" id="new-item-original-price" placeholder="Original Price">
+                    <button class="add-item-button" onclick="addItem()">Add Item</button>
+                </div>
+            </div>
+
+<!-- About Us Content -->
+<div id="about-us-content" class="about-container" style="display: none;">
+    <h2 class="about-title">About Us</h2>
+    <p class="about-description">Meet the team behind the Sari-Sari Store Inventory Management System:</p>
+    
+    <div class="team-grid">
+        <div class="team-member">
+            <div class="name-container">
+                <h3>Clark Jay Lapez</h3>
+            </div>
+            <p class="role">Lead Developer</p>
+            <p>Clark, as the lead developer, played a key role in bringing the system to life. He focused on building its core functions, including inventory tracking, real-time updates, and user authentication. While he contributed significantly, he believes the project’s success was a team effort, made possible through collaboration and dedication.</p>
+            <p class="contact">📞 Contact: 0912-345-6789</p>
+        </div>
+        <div class="team-member">
+            <div class="name-container">
+                <h3>Kylle Almirol</h3>
+            </div>
+            <p class="role">System Analyst</p>
+            <p>Kylle played a crucial role in planning the system’s workflow, making sure every feature was well-structured and efficient. His careful analysis and problem-solving skills allowed the team to create an easy-to-use and well-organized inventory system that meets the needs of sari-sari store owners.</p>
+            <p class="contact">📞 Contact: 0913-456-7890</p>
+        </div>
+        <div class="team-member">
+            <div class="name-container">
+                <h3>Princess Ella Ibañes</h3>
+            </div>
+            <p class="role">UI Designer</p>
+            <p>Ella designed the system’s interface, ensuring it was not only visually appealing but also user-friendly. She focused on simplicity and accessibility, allowing store owners to manage their inventory with ease. Her design skills greatly enhanced the overall experience of the system.</p>
+            <p class="contact">📞 Contact: 0914-567-8901</p>
+        </div>
+        <div class="team-member">
+            <div class="name-container">
+                <h3>Kear Paul Cadungog</h3>
+            </div>
+            <p class="role">Developer & Support</p>
+            <p>Kear contributed to coding, debugging, and improving various features of the system. He worked closely with the team to make sure everything was running smoothly, ensuring that store owners could rely on a stable and efficient platform for their inventory needs.</p>
+            <p class="contact">📞 Contact: 0915-678-9012</p>
+        </div>
+        <div class="team-member">
+            <div class="name-container">
+                <h3>James Jun Lustan</h3>
+            </div>
+            <p class="role">Developer & Tester</p>
+            <p>James focused on testing and refining the system, identifying issues and working with the team to enhance performance. His attention to detail ensured that all functions operated correctly, making the system reliable and user-friendly for store owners.</p>
+            <p class="contact">📞 Contact: 0916-789-0123</p>
+        </div>
+    </div>
+</div>
+
+
+</style>
+
+
+    <script src="script.js" defer></script> >
+</body>
+</html>
